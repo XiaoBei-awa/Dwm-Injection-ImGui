@@ -11,12 +11,12 @@
 | 版本 | 支持环境 | 特性说明 |
 | --- | --- | --- |
 | **Dwm Injection ImGui** | Windows 10 22H2Windows 11 25H2（仅虚拟机） | 初代实现版本，仅兼容虚拟机环境与指定系统版本 |
-| **Dwm Injection ImGui 2** | 全版本 Windows 系统物理机 + 虚拟机 通用 | 重构渲染与注入逻辑，兼容性全面升级，支持物理机环境 |
+| **Dwm Injection ImGui 2** | 全版本 Windows 系统物理机 + 虚拟机 通用 | 重构Hook函数，兼容性全面升级，支持物理机环境 |
 
 ## 📌 使用方法
 
 > 
-> ⚠️ **强制要求：DLL 文件路径不可自定义，必须严格放置在 C 盘根目录**
+> ⚠️⚠️⚠️ **强制要求：DLL 文件路径不可自定义，必须严格放置在 C 盘根目录**
 
 ### 操作步骤
 
@@ -32,19 +32,13 @@ C:\DwmHook.dll
 
 ### 卸载与恢复
 
-若需要移除注入效果，重启电脑即可；DWM 进程自动重启后会自动卸载注入的 DLL，不会残留系统修改。
+若需要移除注入效果，结束dwm进程或重启电脑即可；DWM 进程自动重启后会自动卸载注入的 DLL，不会残留系统修改。
 
-## ⚠️ 禁用 Independent Flip 注册表教程（强制 Composed Flip）
+## ⚠️ 禁用 Independent Flip 注册表（强制 Composed Flip）
 
 ### 为什么必须禁用 Independent Flip
 
 在物理机环境中，当游戏进入全屏 / 无边框全屏模式时，Windows 系统会强制触发 **Independent Flip（独立翻转）** 机制：游戏画面直接输出到硬件显示平面，整个渲染过程**不再经过 DWM 进程合成**，完全绕过桌面窗口管理器。
-
-这会直接导致本项目出现以下问题：
-
-- DWM 注入的 ImGui 覆盖层被游戏画面完全遮挡，无法显示
-- 覆盖层层级异常、闪烁、渲染撕裂
-- 全屏状态下截图、录屏出现黑屏
 
 因此必须通过修改注册表禁用 Independent Flip，强制系统使用 **Composed Flip（合成翻转）** 模式，让所有画面都经过 DWM 合成后再输出，保证 Overlay 覆盖层正常工作。
 
@@ -85,7 +79,7 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm
 5. **确认删除 `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` 路径下的 `DisableOverlays` 键值（如有）**
 6. 重启电脑生效
 
-### 🚨 高危崩溃警告
+### 🚨 dwm进程崩溃警告
 
 **Windows 11 24H2 及以上系统，绝对禁止同时设置以下两个注册表键值！**
 
@@ -95,7 +89,6 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm
 同时配置驱动级与 DWM 合成器级的 MPO 禁用参数，会导致 DWM 渲染管道死锁，触发 `dwm.exe` 无限循环崩溃、桌面反复黑屏重启，只能进入安全模式删除对应注册表项才能恢复。
 
 > 
-> 补充说明：Windows 11 24H2 及以上系统已不再读取 `OverlayTestMode` 参数，单独设置也不会生效，仅保留 `DisableOverlays` 即可。
 
 ### 禁用 Independent Flip 后的性能影响
 
@@ -108,7 +101,6 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm
 | GPU 占用 | 上升 2% ~ 5% | DWM 需要额外执行一次全屏画面合成，增加显卡负载 |
 | 输入延迟 | 增加 1 ~ 3ms | 画面需经过 DWM 合成后输出，相比 Independent Flip 延迟小幅上升 |
 | 帧率上限 | 受显示器刷新率限制 | 合成模式默认垂直同步，无法突破显示器刷新率上限 |
-| 系统功耗 | 小幅上升 | 额外的合成计算导致 GPU 功耗略有增加 |
 | 画面稳定性 | 显著提升 | 消除 Independent Flip 动态切换导致的闪烁、黑屏、层级异常 |
 
 > 
