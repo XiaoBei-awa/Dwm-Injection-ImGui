@@ -32,7 +32,93 @@ C:\DwmHook.dll
 
 ### 卸载与恢复
 
-若需要移除注入效果，结束Dwm进程或重启电脑即可；DWM 进程自动重启后会自动卸载注入的 DLL，不会残留系统修改。
+若需要移除注入效果，重启电脑即可；DWM 进程自动重启后会自动卸载注入的 DLL，不会残留系统修改。
+
+## ⚠️ 禁用 Independent Flip 注册表教程（强制 Composed Flip）
+
+### 为什么必须禁用 Independent Flip
+
+在物理机环境中，当游戏进入全屏 / 无边框全屏模式时，Windows 系统会强制触发 **Independent Flip（独立翻转）** 机制：游戏画面直接输出到硬件显示平面，整个渲染过程**不再经过 DWM 进程合成**，完全绕过桌面窗口管理器。
+
+这会直接导致本项目出现以下问题：
+
+- DWM 注入的 ImGui 覆盖层被游戏画面完全遮挡，无法显示
+- 覆盖层层级异常、闪烁、渲染撕裂
+- 全屏状态下截图、录屏出现黑屏
+
+因此必须通过修改注册表禁用 Independent Flip，强制系统使用 **Composed Flip（合成翻转）** 模式，让所有画面都经过 DWM 合成后再输出，保证 Overlay 覆盖层正常工作。
+
+### 按系统版本选择对应方案
+
+> 
+> **核心规则：两个注册表路径二选一，严禁同时设置**
+> 
+> 
+> - Windows 11 24H2 及以上版本：使用 `GraphicsDrivers` 路径
+> - Windows 10 / Windows 11 22H2 / 23H2 等旧版本：使用 `Dwm` 路径
+
+#### 方案一：Windows 11 24H2 及以上版本（24H2 / 25H2）
+
+在显卡驱动层面全局禁用硬件覆盖平面（MPO），彻底关闭 Independent Flip，是 24H2 以上系统唯一有效的方案。
+
+1. 按 `Win + R` 输入 `regedit`，打开注册表编辑器
+2. 定位到以下路径：
+```
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
+```
+3. 右侧空白处右键 → 新建 → **DWORD (32 位) 值**，命名为 `DisableOverlays`
+4. 双击该值，将「数值数据」改为 `1`，基数保持「十六进制」
+5. **确认删除 `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm` 路径下的 `OverlayTestMode` 键值（如有）**
+6. 重启电脑生效
+
+#### 方案二：Windows 10 22H2 / Windows 11 22H2 / 23H2 旧版本
+
+作用于 DWM 合成器层面，强制所有窗口走合成路径，系统兼容性好，旧版本系统下效果稳定。
+
+1. 按 `Win + R` 输入 `regedit`，打开注册表编辑器
+2. 定位到以下路径：
+```
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm
+```
+3. 右侧空白处右键 → 新建 → **DWORD (32 位) 值**，命名为 `OverlayTestMode`
+4. 双击该值，将「数值数据」改为 `5`，基数保持「十六进制」
+5. **确认删除 `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` 路径下的 `DisableOverlays` 键值（如有）**
+6. 重启电脑生效
+
+### 🚨 高危崩溃警告
+
+**Windows 11 24H2 及以上系统，绝对禁止同时设置以下两个注册表键值！**
+
+- `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` → `DisableOverlays`
+- `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm` → `OverlayTestMode`
+
+同时配置驱动级与 DWM 合成器级的 MPO 禁用参数，会导致 DWM 渲染管道死锁，触发 `dwm.exe` 无限循环崩溃、桌面反复黑屏重启，只能进入安全模式删除对应注册表项才能恢复。
+
+> 
+> 补充说明：Windows 11 24H2 及以上系统已不再读取 `OverlayTestMode` 参数，单独设置也不会生效，仅保留 `DisableOverlays` 即可。
+
+### 禁用 Independent Flip 后的性能影响
+
+强制切换为 Composed Flip 模式后，系统渲染路径发生变化，对性能的影响如下：
+
+表格
+
+| 性能维度 | 变化情况 | 说明 |
+| --- | --- | --- |
+| GPU 占用 | 上升 2% ~ 5% | DWM 需要额外执行一次全屏画面合成，增加显卡负载 |
+| 输入延迟 | 增加 1 ~ 3ms | 画面需经过 DWM 合成后输出，相比 Independent Flip 延迟小幅上升 |
+| 帧率上限 | 受显示器刷新率限制 | 合成模式默认垂直同步，无法突破显示器刷新率上限 |
+| 系统功耗 | 小幅上升 | 额外的合成计算导致 GPU 功耗略有增加 |
+| 画面稳定性 | 显著提升 | 消除 Independent Flip 动态切换导致的闪烁、黑屏、层级异常 |
+
+> 
+> 整体性能损失远小于传统 BitBlt 拷贝模式，绝大多数游戏场景下体感差异极小，主要收益是 Overlay 覆盖层的兼容性与稳定性大幅提升。
+
+### 还原方法
+
+1. 打开注册表编辑器，定位到对应修改的路径
+2. 删除创建的 `DisableOverlays` 或 `OverlayTestMode` 键值
+3. 重启电脑即可恢复系统默认的 Independent Flip 策略
 
 ## 注意事项
 
