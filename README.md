@@ -56,7 +56,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
 5. **确认删除 `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm` 路径下的 `OverlayTestMode` 键值（如有）**
 6. 重启电脑生效
 
-#### 方案二：Windows 10 22H2 / Windows 11 22H2 / 23H2 旧版本
+#### 方案二：Windows 10 / Windows 11 21H2 / 22H2 / 23H2 旧版本
 
 作用于 DWM 合成器层面，强制所有窗口走合成路径。
 
