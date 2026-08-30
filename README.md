@@ -21,14 +21,14 @@
 ```
 C:\DwmHook.dll
 ```
-2. **执行注入 
-右键点击注入器程序 → 选择「以管理员身份运行」**，等待注入完成后，即可在桌面看到 ImGui 覆盖层。
+2. **执行注入 **
+右键点击注入器程序 → 选择「**以管理员身份运行**」，等待注入完成后，即可在桌面看到 ImGui 覆盖层。
 
 ### 卸载与恢复
 
 若需要移除注入效果，结束 DWM 进程或重启电脑即可；DWM 进程自动重启后会自动卸载注入的 DLL，不会残留系统修改。
 
-## ⚠️ 禁用 Independent Flip 注册表（强制 Composed Flip）
+## ⚠️ 禁用 Independent Flip（强制 Composed Flip）
 
 ### 为什么必须禁用 Independent Flip
 
