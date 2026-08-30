@@ -1,4 +1,4 @@
-﻿#include <Windows.h>
+#include <Windows.h>
 #include <psapi.h>
 #include <d3d11.h>
 
@@ -37,28 +37,26 @@ static void StartImGuiRender(ID3D11Texture2D* D3D11Texture2D)
 		ImGuiInitialize = true;
 
 		D3D11Texture2D->GetDevice(&g_pd3dDevice);
-
 		g_pd3dDevice->GetImmediateContext(&g_pd3dContext);
-
-		//g_pd3dDevice->CreateRenderTargetView(D3D11Texture2D, nullptr, &g_prtView);
 
 		ImGui::CreateContext();
 		ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dContext);
 
+		// 获取后备缓冲区尺寸
+		D3D11_TEXTURE2D_DESC bbDesc;
+		D3D11Texture2D->GetDesc(&bbDesc);
+
+		// 设置 ImGui 显示尺寸
+		ImGui::GetIO().DisplaySize = ImVec2((float)bbDesc.Width, (float)bbDesc.Height);
+
 		log("[+] ImGui initialized successfully\n");
 	}
-
-	// 获取后备缓冲区尺寸
-	D3D11_TEXTURE2D_DESC bbDesc;
-	D3D11Texture2D->GetDesc(&bbDesc);
-
-	// 设置 ImGui 显示尺寸
-	ImGui::GetIO().DisplaySize = ImVec2((float)bbDesc.Width, (float)bbDesc.Height);
 
 	// 创建 RTV
 	if (g_prtView) { g_prtView->Release(); g_prtView = nullptr; }
 	g_pd3dDevice->CreateRenderTargetView(D3D11Texture2D, nullptr, &g_prtView);
 
+	// 释放后备缓冲区
 	D3D11Texture2D->Release();
 
 	// 保存原始渲染目标
