@@ -54,6 +54,7 @@ ID3D11Texture2D* GetBackBuffer(void* overlaySwapChain)
             VirtFunc func2 = (VirtFunc)vt2[19];     // 索引 19
             void* r2 = func2(r1);                   // 返回纹理对象（IUnknown*）
 
+            // AddRef 增加一次引用计数
             ID3D11Texture2D* tex = nullptr;
             HRESULT hr = ((IUnknown*)r2)->QueryInterface(IID_ID3D11Texture2D, (void**)&tex);
             if (FAILED(hr) || !tex) return nullptr;
