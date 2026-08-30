@@ -1,12 +1,10 @@
 # Dwm-Injection-ImGui
 
-基于 Windows 桌面窗口管理器（DWM）的注入式 ImGui 渲染框架，通过向 DWM 进程注入自定义 DLL，实现全局桌面级 ImGui UI 覆盖层；无需绑定特定应用窗口，即可在所有桌面元素上层绘制交互界面，适用于桌面调试工具、系统级可视化插件、Overlay 开发等场景。
+基于 Windows 桌面窗口管理器（DWM）的注入式 ImGui 渲染框架，通过向 DWM 进程注入自定义 DLL，实现全局桌面级 ImGui UI 覆盖层；无需绑定特定应用窗口，即可在所有桌面元素上层绘制交互界面。
 
 ## 版本说明
 
 项目包含两个版本，适配不同的系统与运行环境，请根据实际场景选择：
-
-表格
 
 | 版本 | 支持环境 | 特性说明 |
 | --- | --- | --- |
@@ -20,15 +18,13 @@
 
 ### 操作步骤
 
-1. **选择对应版本**
-根据你的系统与运行环境，进入 `Dwm Injection ImGui` 或 `Dwm Injection ImGui 2` 文件夹，获取对应版本的 `DwmHook.dll` 与注入器程序。
-2. **放置 DLL 文件**
+1. **放置 DLL 文件**
 将对应版本的 `DwmHook.dll` 文件复制到 **C 盘根目录**，确保最终文件完整路径为：
 
 ```
 C:\DwmHook.dll
 ```
-3. **执行注入****右键点击注入器程序 → 选择「以管理员身份运行」**，等待注入完成后，即可在桌面看到 ImGui 覆盖层。
+2. **执行注入****右键点击注入器程序 → 选择「以管理员身份运行」**，等待注入完成后，即可在桌面看到 ImGui 覆盖层。
 
 ### 卸载与恢复
 
@@ -45,15 +41,12 @@ C:\DwmHook.dll
 ### 按系统版本选择对应方案
 
 > 
-> **核心规则：两个注册表路径二选一，严禁同时设置**
-> 
-> 
 > - Windows 11 24H2 及以上版本：使用 `GraphicsDrivers` 路径
 > - Windows 10 / Windows 11 22H2 / 23H2 等旧版本：使用 `Dwm` 路径
 
 #### 方案一：Windows 11 24H2 及以上版本（24H2 / 25H2）
 
-在显卡驱动层面全局禁用硬件覆盖平面（MPO），彻底关闭 Independent Flip，是 24H2 以上系统唯一有效的方案。
+在显卡驱动层面全局禁用硬件覆盖平面（MPO），彻底关闭 Independent Flip。
 
 1. 按 `Win + R` 输入 `regedit`，打开注册表编辑器
 2. 定位到以下路径：
@@ -67,7 +60,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
 
 #### 方案二：Windows 10 22H2 / Windows 11 22H2 / 23H2 旧版本
 
-作用于 DWM 合成器层面，强制所有窗口走合成路径，系统兼容性好，旧版本系统下效果稳定。
+作用于 DWM 合成器层面，强制所有窗口走合成路径。
 
 1. 按 `Win + R` 输入 `regedit`，打开注册表编辑器
 2. 定位到以下路径：
@@ -79,22 +72,20 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm
 5. **确认删除 `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` 路径下的 `DisableOverlays` 键值（如有）**
 6. 重启电脑生效
 
-### 🚨 dwm进程崩溃警告
+### 🚨 DWM进程崩溃警告
 
 **Windows 11 24H2 及以上系统，绝对禁止同时设置以下两个注册表键值！**
 
 - `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` → `DisableOverlays`
 - `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm` → `OverlayTestMode`
 
-同时配置驱动级与 DWM 合成器级的 MPO 禁用参数，会导致 DWM 渲染管道死锁，触发 `dwm.exe` 无限循环崩溃、桌面反复黑屏重启，只能进入安全模式删除对应注册表项才能恢复。
+同时配置驱动级与 DWM 合成器级的 MPO 禁用参数，会导致 DWM 渲染管道死锁，触发 `dwm.exe` 无限循环崩溃、桌面反复黑屏重启。
 
 > 
 
 ### 禁用 Independent Flip 后的性能影响
 
 强制切换为 Composed Flip 模式后，系统渲染路径发生变化，对性能的影响如下：
-
-表格
 
 | 性能维度 | 变化情况 | 说明 |
 | --- | --- | --- |
@@ -121,5 +112,5 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Dwm
 
 ## 免责声明
 
-本项目仅用于 Windows 系统底层技术学习与研究用途，禁止用于任何非法场景、违规软件开发或商业用途。
+本项目仅用于 Windows 系统底层技术学习与研究用途，禁止用于任何非法场景、违规软件、游戏外挂开发或商业用途。
 进程注入属于系统底层操作，存在一定兼容性风险，因使用本项目造成的任何系统故障、数据丢失或其他后果，由使用者自行承担。
