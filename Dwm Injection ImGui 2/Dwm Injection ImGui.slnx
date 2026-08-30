@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Dwm Injection/Dwm Injection.vcxproj" Id="1525b6b4-15ff-4ba4-8ba0-906a7e1854fe" />
+  <Project Path="DwmHook/DwmHook.vcxproj" Id="bd7f8b2c-0f29-4c4b-af67-e14f61ea6caf" />
+</Solution>
